@@ -50,7 +50,7 @@ namespace CSharpApp
 
             // Output the string to our output label.
             lblResult.Text = finalString;
-
+            lblResult.Visible = true;
         } // end btnReverseChars_Click()
 
         protected void btnReverseString_Click(object sender, EventArgs e)
@@ -71,7 +71,7 @@ namespace CSharpApp
 
             // Output the string to our label.
             lblResult.Text = finalString;
-
+            lblResult.Visible = true;
         }
 
         // Remove whitespaces from the input string.
@@ -89,6 +89,7 @@ namespace CSharpApp
 
             // Output the string to output label.
             lblResult.Text = finalString;
+            lblResult.Visible = true;
         } // end btnReverseString_Click()
 
         protected void btnCountOccurences_Click(object sender, EventArgs e)
@@ -97,6 +98,7 @@ namespace CSharpApp
             if(String.IsNullOrEmpty(txtCountChar.Text) || String.IsNullOrWhiteSpace(txtCountChar.Text))
             {
                 lblResult.Text = "The search string is empty.";
+                lblResult.Visible = true;
                 return;
             }
             // Create a dictionary for later use. 
@@ -122,11 +124,13 @@ namespace CSharpApp
             if (value > 0)
             {
                 lblResult.Text = "The occurences of '" + checkKey + "' in this string is: " + value.ToString();
+                lblResult.Visible = true;
             }
             // Else output that there are no occurences of that character.
             else
             {
                 lblResult.Text = "There are no occurences of '" + checkKey + "' in this string.";
+                lblResult.Visible = true;
             }
 
         } // end btnCountOccurences_Click()
@@ -144,6 +148,7 @@ namespace CSharpApp
             catch(Exception ex)
             {
                 lblResult.Text = "Your entry must be two characters separated by a comma.";
+                lblResult.Visible = true;
                 return;
             }
                 
@@ -152,6 +157,7 @@ namespace CSharpApp
             if (transposeArray.Length < 2)
             {
                 lblResult.Text = "Your entry must be two characters separated by a comma.";
+                lblResult.Visible = true;
                 return;
             }
         
@@ -169,11 +175,13 @@ namespace CSharpApp
             if (!txtInput.Text.Contains(_1stChar))
             {
                 lblResult.Text = "The input string does not contain '" + _1stChar + " '";
+                lblResult.Visible = true;
                 return;
             }
             else if (!txtInput.Text.Contains(_2ndChar))
             {
                 lblResult.Text = "The input string does not contain '" + _2ndChar + " '";
+                lblResult.Visible = true;
                 return;
             }
             
@@ -200,6 +208,7 @@ namespace CSharpApp
 
             // Output the string
             lblResult.Text = outputString;
+            lblResult.Visible = true;
         } // btnChange_Click()
 
         public Dictionary<string, int> populateDictionary(string inputString, Dictionary<string, int> dict)
@@ -262,6 +271,7 @@ namespace CSharpApp
             if (!String.IsNullOrEmpty(strHigh))
             {
                 lblResult.Text = "The highest character in the input string is '" + strHigh + "'.";
+                lblResult.Visible = true;
             }
             
 
@@ -296,6 +306,7 @@ namespace CSharpApp
             if (!String.IsNullOrEmpty(strLow))
             {
                 lblResult.Text = "The highest character in the input string is '" + strLow + "'.";
+                lblResult.Visible = true;
             }
         }
 
@@ -305,6 +316,7 @@ namespace CSharpApp
             if (String.IsNullOrEmpty(txtTranspose.Text))
             {
                 lblResult.Text = "The search string is empty.";
+                lblResult.Visible = true;
                 return;
             }
             // Split the input string into a char array.
@@ -324,12 +336,14 @@ namespace CSharpApp
             catch (Exception)
             {
                 lblResult.Text = "The search string must be two characters, separated by a comma.";
+                lblResult.Visible = true;
                 return;
             }
             // Ensure that the search string has two comma delimited chars
             if (searchArray.Length < 2)
             {
                 lblResult.Text = "The search string must be two characters, separated by a comma.";
+                lblResult.Visible = true;
                 return;
             }
        
@@ -363,6 +377,7 @@ namespace CSharpApp
             }
 
             lblResult.Text = "The new string is: " + outputString;
+            lblResult.Visible = true;
         }
 
         protected void btnRemove_Click(object sender, EventArgs e)
@@ -370,6 +385,7 @@ namespace CSharpApp
             if (String.IsNullOrEmpty(txtRemove.Text))
             {
                 lblResult.Text = "The search string is empty.";
+                lblResult.Visible = true;
                 return;
             }
             // Split the input string into a char array
