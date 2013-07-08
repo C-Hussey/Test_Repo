@@ -8,12 +8,14 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using CSharpApp.BusinessLayer;
 
+
 namespace CSharpApp
 {
     public partial class Reports : System.Web.UI.Page
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            
             lblLoginError.Visible = false;
             if (!IsPostBack)
             {
@@ -82,7 +84,7 @@ namespace CSharpApp
             Response.Redirect("ResetPassword.aspx");
         }
 
-        // Log in the user (create a session for them, store that session in a table, and 
+        // Log in the user (create a session for them, store that session in a table).
         protected void userLogin(string username, string password)
         {
             UserBL us = new UserBL();        
@@ -92,11 +94,11 @@ namespace CSharpApp
             Session["User"] = newGuid;
             // Also, add user session to database table.
             us.enterUserSession(username, newGuid);
-            // Welcome user.
-            lblWelcomeUser.Text = "Welcome " + username + "!";
-            // Clear out the text fields.
-            txtUserName.Text = "";
-            txtPassword.Text = ""; 
+            Session["LoggedIn"] = "true";
+            Session["Username"] = username;
+            Response.Redirect("SecReports.aspx");
+           
+           
         }
 
       
