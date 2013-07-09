@@ -1,4 +1,3 @@
-Test_Repo
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -145,7 +144,7 @@ namespace CSharpApp
             {
                 transposeArray = txtTransChars.Text.Split(',');
             }
-            catch(Exception ex)
+            catch(Exception)
             {
                 lblResult.Text = "Your entry must be two characters separated by a comma.";
                 lblResult.Visible = true;
