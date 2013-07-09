@@ -1,5 +1,3 @@
-Test_Repo
-=========
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +12,11 @@ namespace CSharpApp.Account
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-
+            resetFields();
         }
+
         // Attempt to create a new user.
-        protected void lbnConfirm_Click(object sender, EventArgs e)
+        protected void btnConfirm_Click(object sender, EventArgs e)
         {
             // Validate that all the fields are valid and filled out correctly.
             if (validateForm())
@@ -27,11 +26,13 @@ namespace CSharpApp.Account
                 string result = null;
 
                 result = us.insertNewUser(txtUsername.Text, txtPassword.Text, txtEmail.Text);
-                if (String.IsNullOrEmpty(result))
+                // If string result is not null, then it is returning an error message. Output that error.
+                if (!String.IsNullOrEmpty(result))
                 {
                     lblResult.Text = result;
                     return;
                 } // end if    
+                // Else the user was able to be created. Fill some session variables, and redirect back to reports page.
                 else
                 {
                     Session["Username"] = txtUsername.Text;
@@ -71,14 +72,21 @@ namespace CSharpApp.Account
                 lblPasswordErr.Visible = true;
                 return false;
             }
-            // Else if the confirm password feild is left blank:
+            // Else if the confirm password field is left blank:
             else if (String.IsNullOrEmpty(txtConfirmPassword.Text) || String.IsNullOrWhiteSpace(txtConfirmPassword.Text))
             {
                 lblResult.Text = "Password must be supplied.";
                 lblConfirmPasswordErr.Visible = true;
                 return false;
             }
-            // Else if the passwords do not match
+            // Else if the password is not long enough:
+            else if (txtPassword.Text.Length < 6)
+            {
+                lblResult.Text = "Password must be at least 6 characters in length.";
+                lblPasswordErr.Visible = true;
+                return false;
+            }
+            // Else if the passwords do not match:
             else if (!txtPassword.Text.Equals(txtConfirmPassword.Text))
             {
                 lblResult.Text = "Passwords do not match.";
@@ -91,7 +99,7 @@ namespace CSharpApp.Account
         }
 
         // User clicked "Cancel". Redirect back to the previous page.
-        protected void lbnCancel_Click(object sender, EventArgs e)
+        protected void btnCancel_Click(object sender, EventArgs e)
         {
             Response.Redirect("Reports.aspx");
         }
@@ -111,5 +119,13 @@ namespace CSharpApp.Account
                 return false;
             }
         }
-    }
+
+        protected void resetFields()
+        {
+            lblConfirmPasswordErr.Visible = false;
+            lblEmailErr.Visible = false;
+            lblPasswordErr.Visible = false;
+            lblUsernameErr.Visible = false;
+        }
+    } // end class
 }
