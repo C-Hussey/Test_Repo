@@ -120,7 +120,7 @@ namespace CSharpApp.Pages
                 {
                     ListItem item = new ListItem(views[i], i.ToString());
                     cblEmployeeView.Items.Add(item);
-                    // CHeck each checkbox by default.
+                    // Check each checkbox by default.
                     item.Selected = true;
                 }
         }
@@ -222,5 +222,8 @@ namespace CSharpApp.Pages
             }
             return ds;
         }
+
+
+  
     } // end class
 }
