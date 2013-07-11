@@ -304,7 +304,7 @@ namespace CSharpApp
 
             if (!String.IsNullOrEmpty(strLow))
             {
-                lblResult.Text = "The highest character in the input string is '" + strLow + "'.";
+                lblResult.Text = "The lowest character in the input string is '" + strLow + "'.";
                 lblResult.Visible = true;
             }
         }
