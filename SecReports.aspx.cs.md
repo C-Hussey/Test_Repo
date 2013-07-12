@@ -25,7 +25,6 @@ namespace CSharpApp.Pages
                     }
                     else
                     {
-                        string what = Session["LoggedIn"].ToString();
                         // Welcome user.
                         lblWelcomeUser.Text = "Welcome " + Session["Username"] + "!";
                         txtUserName.Enabled = false;
