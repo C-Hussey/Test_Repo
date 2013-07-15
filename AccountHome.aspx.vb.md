@@ -3,6 +3,16 @@ Public Class AccountHome
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
         Dim us As New UserBL()
+
+        'If the user just created this account, then give them a notification about creating an account for them.
+        If Session("FirstTimeLogin") = True Then
+            'Create an account
+            If us.createDefaultAccountInfo(Session("Username")) Then
+                ScriptManager.RegisterStartupScript(Me, Me.GetType(), "open", "alert('This is your first time logging into this application. Therefore, for demonstration purposes, you will be given a generated set of account/billing info.');", True)
+                Session.Remove("FirstTimeLogin")
+            End If
+        End If
+
         'Make sure the user is logged in. If not, push them back to the Defualt page.
         If Session("LoggedIn") = Nothing Then
             Response.Redirect("Default.aspx")
@@ -18,12 +28,12 @@ Public Class AccountHome
 
         'Populate dropdown list if it is empty
         If ddlOption.Items.Count = 0 Then
-            Dim options As String() = {"--Select--", "Transfer funds", "Pay Bill", "Open New Account", "Cancel Account"}
+            Dim options As String() = {"--Select--", "Transfer funds", "Pay Bill"}
             For i As Integer = 0 To options.Length - 1
                 ddlOption.Items.Add(New ListItem(options(i), i.ToString()))
             Next
         End If
-        
+
         'Rebind gvPayBill so that the gridview is refreshed if the user is ttying to pay a bill
         gvPayBill.DataSource = us.getUserBilling(Session("Username"))
         gvPayBill.DataBind()
@@ -40,11 +50,7 @@ Public Class AccountHome
             Dim accountNum As String = ""
             Dim amount As String = ""
             'Fill ddlActionFrom with info from the gridview
-            For Each row As GridViewRow In gvAccountInfo.Rows
-                accountNum = row.Cells(0).Text
-                amount = row.Cells(2).Text
-                ddlActionFrom.Items.Add(New ListItem("VB Bank Account # " + accountNum + " --- $" + amount, accountNum))
-            Next
+            repopulateAcctDropdowns(ddlActionFrom)
 
             'Else get the bills for the current customer
         ElseIf ddlOption.SelectedIndex = 2 Then
@@ -135,11 +141,7 @@ Public Class AccountHome
         'Fill the dropdown list with info from gvAccountInfo so that we can easily see which account we are paying from, and how much
         'money is contained therein.
         If ddlPayFromAccount.Items.Count = 0 Then
-            For Each row As GridViewRow In gvAccountInfo.Rows
-                bankAccountNum = row.Cells(0).Text
-                amount = row.Cells(2).Text
-                ddlPayFromAccount.Items.Add(New ListItem("VB Bank Account # " + bankAccountNum + " --- $" + amount, bankAccountNum))
-            Next
+            repopulateAcctDropdowns(ddlPayFromAccount)
         End If
 
         upnPayFromAccount.Visible = True
@@ -147,54 +149,56 @@ Public Class AccountHome
     End Sub
 
     Protected Sub btnSubmitPayment_Click(sender As Object, e As EventArgs) Handles btnSubmitPayment.Click
-        'Validate the input amount
-        If validateInput() Then
-            Dim us As UserBL = New UserBL()
-            Dim accountNumber As Integer = Convert.ToInt32(ddlPayFromAccount.SelectedValue)
-            'Get the name of the billing account
-            Dim accountName As String = gvPayBill.Rows(Session("SelectedRowIndex")).Cells(0).Text
-            'Get the account number of the billing account
-            Dim billingAccountNum As Integer = us.getBillingAccountNumber(Session("Username"), accountName)
-            'Deduct the payment amount from the billing account by account number.
-            'Updates to the appropriate tables are handled on the back end.
-            If us.deductFromAccount(txtPayAmount.Text, accountNumber, billingAccountNum) Then
-                'Update the Billing gridview
-                gvPayBill.DataSource = us.getUserBilling(Session("Username"))
-                gvPayBill.DataBind()
-                'Update the Account Info gridview
-                Dim userId As Integer = us.getUserID(Session("Username"))
-                gvAccountInfo.DataSource = us.getAccountInfo(userId)
-                gvAccountInfo.DataBind()
 
-                'Clear and reload the dropdown list to reflect any changes to accounts
-                ddlPayFromAccount.Items.Clear()
-                For Each row As GridViewRow In gvAccountInfo.Rows
-                    Dim bankAccountNum As String = row.Cells(0).Text
-                    Dim amount As String = row.Cells(2).Text
-                    ddlPayFromAccount.Items.Add(New ListItem("VB Bank Account # " + bankAccountNum + " --- $" + amount, bankAccountNum))
-                Next
+        'Validate the input amount. Exit if invalid.
+        Dim va As Validation = New Validation()
+        If Not va.validateInput(txtPayAmount.Text, lblPayError) Then
+            Exit Sub
+        End If
 
-                'Remove the update panel, thereby hiding all the associated controls
-                upnPayFromAccount.Visible = False
+        Dim us As UserBL = New UserBL()
+        Dim accountNumber As Integer = Convert.ToInt32(ddlPayFromAccount.SelectedValue)
+        'Get the name of the billing account
+        Dim accountName As String = gvPayBill.Rows(Session("SelectedRowIndex")).Cells(0).Text
+        'Get the account number of the billing account
+        Dim billingAccountNum As Integer = us.getBillingAccountNumber(Session("Username"), accountName)
+        'Ensure that the user doesn't overpay on the account.
+        If va.validateBilling(billingAccountNum, txtPayAmount.Text) Then
+            If us.validateFunds(accountNumber, txtPayAmount.Text) Then
+
+                'Deduct the payment amount from the billing account by account number.
+                'Updates to the appropriate tables are handled on the back end.
+                If us.deductFromAccount(txtPayAmount.Text, accountNumber, billingAccountNum) Then
+                    'Update the Billing gridview
+                    gvPayBill.DataSource = us.getUserBilling(Session("Username"))
+                    gvPayBill.DataBind()
+                    'Update the Account Info gridview
+                    Dim userId As Integer = us.getUserID(Session("Username"))
+                    gvAccountInfo.DataSource = us.getAccountInfo(userId)
+                    gvAccountInfo.DataBind()
+
+                    'Clear and reload the dropdown list to reflect any changes to accounts
+                    repopulateAcctDropdowns(ddlPayFromAccount)
+
+                    'Remove the update panel, thereby hiding all the associated controls
+                    upnPayFromAccount.Visible = False
+                End If
+            Else
+                lblPayError.Text = "Insufficient funds in the selected account"
+                lblPayError.Visible = True
             End If
+        Else
+            lblPayError.Text = "Cannot submit a payment higher than the billing amount"
+            lblPayError.Visible = True
         End If
     End Sub
-
-    'Ensure that no erroneous text was typed into the textbox.
-    Protected Function validateInput() As Boolean
-
-        If Not IsNumeric(txtPayAmount.Text) Then
-            lblPayError.Text = "**Input amount was not a number or was not in the correct format"
-            lblPayError.Visible = True
-            Return False
-        End If
-        lblPayError.Visible = False
-        Return True
-    End Function
 
     'If user clicks Cancel, then re-hide the update panel
     Protected Sub btnCancel_Click(sender As Object, e As EventArgs) Handles btnCancel.Click
         upnPayFromAccount.Visible = False
+        lblPayError.Text = ""
+        lblPayError.Visible = False
+        repopulateAcctDropdowns(ddlPayFromAccount)
     End Sub
 
     Protected Sub btnTransfer_Click(sender As Object, e As EventArgs) Handles btnTransfer.Click
@@ -202,31 +206,67 @@ Public Class AccountHome
         Dim toAccount As String = ddlActionTo.SelectedValue
 
         Dim us As UserBL = New UserBL()
-        'Deduct from the first acount
-        us.deductFromAccount(txtTransferAmount.Text, fromAccount)
-        'Add to the second account
-        us.addToAccount(txtTransferAmount.Text, toAccount)
+        Dim va As Validation = New Validation()
 
-        'Update the account info gridview to reflect the changes.
-        Dim userId As Integer = us.getUserID(Session("Username"))
-        gvAccountInfo.DataSource = us.getAccountInfo(userId)
-        gvAccountInfo.DataBind()
+        'Validate input.
+        If Not va.validateInput(txtTransferAmount.Text, lblTransferErr) Then
+            Exit Sub
 
-        'Update the dropdown list to reflect the changes.
+            'Else ensure that the "From" account does not become overdrawn due to the transfer of funds.
+        ElseIf Not us.validateFunds(fromAccount, txtTransferAmount.Text) Then
+            lblTransferErr.Text = "Insufficient funding to complete transfer"
+            lblTransferErr.Visible = True
+
+            'Else it passes. Continue with the fund transfer.
+        Else
+            'Deduct from the first acount
+            us.deductFromAccount(txtTransferAmount.Text, fromAccount)
+            'Add to the second account
+            us.addToAccount(txtTransferAmount.Text, toAccount)
+
+            'Update the account info gridview to reflect the changes.
+            Dim userId As Integer = us.getUserID(Session("Username"))
+            gvAccountInfo.DataSource = us.getAccountInfo(userId)
+            gvAccountInfo.DataBind()
+
+            'Update the dropdown lists to reflect the changes.
+            repopulateAcctDropdowns(ddlActionFrom)
+            repopulateAcctDropdowns(ddlPayFromAccount)
+
+            'Update the dropdown list to reflect the changes.
+            ddlActionTo.Items.Clear()
+
+            'Reset the option dropdown.
+            ddlOption.SelectedIndex = 0
+            'Close/hide upnTransfer update panel.
+            btnCancelTransfer_Click(sender, New System.EventArgs())
+        End If
+
+    End Sub
+    'Cancel the transfer. Hide the update panel and clear all dropdown lists.
+    Protected Sub btnCancelTransfer_Click(sender As Object, e As EventArgs) Handles btnCancelTransfer.Click
+        upnTransfer.Visible = False
+        ddlOption.SelectedIndex = 0
         ddlActionFrom.Items.Clear()
+        ddlActionTo.Items.Clear()
+        btnTransfer.Enabled = False
+        'Reset error message
+        lblTransferErr.Text = ""
+        lblTransferErr.Visible = False
+        txtTransferAmount.Text = ""
+    End Sub
+    'Clear and repopulate the dropdown list associated with account info and amount in account.
+    'Allows for instantly reflecting in the dropdown list any account changes made from transfers, deductions, etc.
+    Protected Function repopulateAcctDropdowns(ByRef dropdownList As DropDownList) As Object
+        'Clear the dropdown.
+        dropdownList.Items.Clear()
+        'Add an initial parameter.
+        dropdownList.Items.Add(New ListItem("---Select---"))
+        'For each account displayed in the account info gridview, create an item in the dropdown.
         For Each row As GridViewRow In gvAccountInfo.Rows
             Dim bankAccountNum As String = row.Cells(0).Text
             Dim amount As String = row.Cells(2).Text
-            ddlActionFrom.Items.Add(New ListItem("VB Bank Account # " + bankAccountNum + " --- $" + amount, bankAccountNum))
+            dropdownList.Items.Add(New ListItem("VB Bank Account # " + bankAccountNum + " --- $" + amount, bankAccountNum))
         Next
-
-        'Update the dropdown list to reflect the changes.
-        ddlActionTo.Items.Clear()
-        'For Each row As GridViewRow In gvAccountInfo.Rows
-        '    Dim bankAccountNum As String = row.Cells(0).Text
-        '    Dim amount As String = row.Cells(2).Text
-        '    ddlActionTo.Items.Add(New ListItem("VB Bank Account # " + bankAccountNum + " --- $" + amount, bankAccountNum))
-        'Next
-
-    End Sub
+    End Function
 End Class
