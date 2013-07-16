@@ -284,4 +284,8 @@ Public Class AccountHome
 
     End Sub
 
+    Protected Sub lbnBack_Click(sender As Object, e As EventArgs) Handles lbnBack.Click
+        Session.RemoveAll()
+        Response.Redirect("~/Default.aspx")
+    End Sub
 End Class
