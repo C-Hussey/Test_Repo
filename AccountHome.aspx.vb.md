@@ -164,16 +164,16 @@ Public Class AccountHome
         Dim billingAccountNum As Integer = us.getBillingAccountNumber(Session("Username"), accountName)
         'Ensure that the user doesn't overpay on the account.
         If va.validateBilling(billingAccountNum, txtPayAmount.Text) Then
+            'Ensure that the user doesn't overdraw from the paying account.
             If us.validateFunds(accountNumber, txtPayAmount.Text) Then
-
+                Dim userId As Integer = us.getUserID(Session("Username"))
                 'Deduct the payment amount from the billing account by account number.
                 'Updates to the appropriate tables are handled on the back end.
-                If us.deductFromAccount(txtPayAmount.Text, accountNumber, billingAccountNum) Then
+                If us.deductFromAccount(txtPayAmount.Text, accountNumber, userId, billingAccountNum) Then
                     'Update the Billing gridview
                     gvPayBill.DataSource = us.getUserBilling(Session("Username"))
                     gvPayBill.DataBind()
                     'Update the Account Info gridview
-                    Dim userId As Integer = us.getUserID(Session("Username"))
                     gvAccountInfo.DataSource = us.getAccountInfo(userId)
                     gvAccountInfo.DataBind()
 
@@ -181,7 +181,11 @@ Public Class AccountHome
                     repopulateAcctDropdowns(ddlPayFromAccount)
 
                     'Remove the update panel, thereby hiding all the associated controls
+                    btnSubmitPayment.Enabled = False
+                    txtPayAmount.Text = ""
+                    lblPayError.Visible = False
                     upnPayFromAccount.Visible = False
+                    upnPayBill.Update()
                 End If
             Else
                 lblPayError.Text = "Insufficient funds in the selected account"
@@ -198,6 +202,7 @@ Public Class AccountHome
         upnPayFromAccount.Visible = False
         lblPayError.Text = ""
         lblPayError.Visible = False
+        txtPayAmount.Text = ""
         repopulateAcctDropdowns(ddlPayFromAccount)
     End Sub
 
@@ -220,12 +225,12 @@ Public Class AccountHome
             'Else it passes. Continue with the fund transfer.
         Else
             'Deduct from the first acount
-            us.deductFromAccount(txtTransferAmount.Text, fromAccount)
+            Dim userId As Integer = us.getUserID(Session("Username"))
+            us.deductFromAccount(txtTransferAmount.Text, fromAccount, userId)
             'Add to the second account
             us.addToAccount(txtTransferAmount.Text, toAccount)
 
             'Update the account info gridview to reflect the changes.
-            Dim userId As Integer = us.getUserID(Session("Username"))
             gvAccountInfo.DataSource = us.getAccountInfo(userId)
             gvAccountInfo.DataBind()
 
@@ -269,4 +274,14 @@ Public Class AccountHome
             dropdownList.Items.Add(New ListItem("VB Bank Account # " + bankAccountNum + " --- $" + amount, bankAccountNum))
         Next
     End Function
+
+    Private Sub ddlPayFromAccount_SelectedIndexChanged(sender As Object, e As System.EventArgs) Handles ddlPayFromAccount.SelectedIndexChanged
+        If ddlPayFromAccount.SelectedIndex > 0 Then
+            btnSubmitPayment.Enabled = True
+        Else
+            btnSubmitPayment.Enabled = False
+        End If
+
+    End Sub
+
 End Class
