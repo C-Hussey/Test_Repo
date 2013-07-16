@@ -1,7 +1,7 @@
 Imports System.Data.SqlClient
 
 Public Class UserBL
-
+    'Search for user in aspnetdb, as well as in a table specific to this application.
     Public Function validateUser(ByVal username As String, ByVal password As String) As String
         Try
             If Not Membership.ValidateUser(username, password) Then
@@ -58,7 +58,12 @@ Public Class UserBL
             Console.WriteLine(e.Message)
         End Try
 
-        Return dataset.Tables(0).Rows(0)("UserID")
+        Try
+            Return dataset.Tables(0).Rows(0)("UserID")
+        Catch ex As Exception
+            Return Nothing
+        End Try
+
     End Function
 
     Public Function getUserBilling(ByVal username As String) As DataSet
@@ -119,7 +124,7 @@ Public Class UserBL
 
     End Function
 
-    Public Function deductFromAccount(ByVal deduction As Decimal, ByVal accountNumber As Decimal, Optional ByVal billingAccountNum As Decimal = Nothing) As Boolean
+    Public Function deductFromAccount(ByVal deduction As Decimal, ByVal accountNumber As Decimal, ByVal userID As Integer, Optional ByVal billingAccountNum As Decimal = Nothing) As Boolean
         Dim dataset As New DataSet()
         Dim us As UserBL = New UserBL()
 
@@ -135,7 +140,7 @@ Public Class UserBL
             cmd.Parameters.Add(New SqlParameter("@BillingAccountNum", billingAccountNum))
             cmd.Parameters.Add(New SqlParameter("@AccountNumber", accountNumber))
             cmd.Parameters.Add(New SqlParameter("@Deduction", deduction))
-
+            cmd.Parameters.Add(New SqlParameter("@UserID", userID))
             cmd.ExecuteNonQuery()
         Catch e As Exception
             Console.WriteLine(e.Message)
