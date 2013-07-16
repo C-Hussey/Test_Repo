@@ -62,7 +62,8 @@ namespace CSharpApp.Pages
             // Delete the user session that was stored in a database table.
             us.deleteUserSession(Session["Username"].ToString(), Guid.Parse(Session["User"].ToString()));
             // Remove all session variables.
-            clearAllSessions();
+            Session.RemoveAll();
+           // clearAllSessions();
             // Redirect to self and let Page Load push user back to the normal reports page.
             Response.Redirect("SecReports.aspx");
             
@@ -77,6 +78,7 @@ namespace CSharpApp.Pages
             // If user goes back to the 0th element in the dropdown list, disable controls.
             if (ddlDepartments.SelectedIndex == 0)
             {
+                gvDept.Visible = false;
                 disableGridviewDependants();
             }  
             // Else bind results to the gridview and enable controls.
@@ -84,7 +86,9 @@ namespace CSharpApp.Pages
             {
                 gvDept.DataSource = ds;               
                 gvDept.DataBind();
+                gvDept.Visible = true;
                 enableGridviewDependants();
+                populateCheckBoxList();
             }
             else
             {
@@ -93,15 +97,6 @@ namespace CSharpApp.Pages
             }
         } // end method
 
-        // Call when user is logging out. Deletes all sessions created during the login process.
-        protected void clearAllSessions()
-        {
-            Session.Remove("LoggedIn");
-            Session.Remove("Username");
-            Session.Remove("Password");
-            Session.Remove("User"); 
-         
-        }
         // Dynamically populate dropdown list with some info.
         protected void populateDropdownList()
         {
@@ -114,6 +109,7 @@ namespace CSharpApp.Pages
         // Dynamically populate checkboxlist with some info.
         protected void populateCheckBoxList()
         {
+            cblEmployeeView.Items.Clear();
             string[] views = { "Start/End Date", "Weekly Schedule", "Total Hours worked", "Pay Rate", "Pay Type" };
                 for (int i = 0; i < views.Length; i++)
                 {
@@ -222,7 +218,5 @@ namespace CSharpApp.Pages
             return ds;
         }
 
-
-  
     } // end class
 }
