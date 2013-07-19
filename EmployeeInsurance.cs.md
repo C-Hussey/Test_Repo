@@ -16,12 +16,14 @@ namespace CSharpApp.Pages
         protected void Page_Load(object sender, EventArgs e)
         {
             /* The following controls need registering in order to cause postback to an update panel 
-             * from within another update panel. */
+             * from within the same update panel or from within another update panel. */
             ScriptManager.GetCurrent(this.Page).RegisterPostBackControl(btnAddEmpInsurance);
             ScriptManager.GetCurrent(this.Page).RegisterPostBackControl(btnAddDepInsurance);
             ScriptManager.GetCurrent(this.Page).RegisterPostBackControl(btnFinalAddEmpIns);
             ScriptManager.GetCurrent(this.Page).RegisterPostBackControl(btnFinalAddDepIns);
-     
+            ScriptManager.GetCurrent(this.Page).RegisterPostBackControl(btnCancelEmpIns);
+            ScriptManager.GetCurrent(this.Page).RegisterPostBackControl(btnCancelDepIns);
+  
             // Bind the headers to the appropriate gridviews for display purposes.
             EmployeeBL em = new EmployeeBL();
             gvDependants.DataSource = em.selectHeaders(gvDependants.ID);
@@ -226,6 +228,18 @@ namespace CSharpApp.Pages
             {
                 lblEmpInsInputErr.Text = "**Input is invalid";
             }
+        }
+        // Hide the update panel which allows the user to add a new Employee Insurance.
+        protected void btnCancelEmpIns_Click(object sender, EventArgs e)
+        {
+            upnAddEmpInsurance.Visible = false;
+            upnAddEmpInsurance.Update();
+        }
+        // Hide the update panel which allows the user to add a new Dependant Insurance.
+        protected void btnCancelDepIns_Click(object sender, EventArgs e)
+        {
+            upnAddDepInsurance.Visible = false;
+            upnAddDepInsurance.Update();
         }
 
     } // end class
